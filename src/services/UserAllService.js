@@ -1,77 +1,88 @@
 const User = require("../models/UserModel");
 const bcrypt = require("bcrypt");
 const { AccessToken, RefreshToken } = require("./JwtAllService")
+const { sendVerificationEmail } = require("../services/EmailAllService")
 
 const registerUserService = (newUser) => {
     return new Promise(async (resolve, reject) => {
-        const { fullName, email, password, phone, address, city } = newUser;
+        const { fullName, email, password, phone, address, city, verificationToken } = newUser;
         try {
             const checkUser = await User.findOne({ email: email });
             if (checkUser !== null) {
-                resolve({
+                return resolve({
                     status: 'ERR',
                     message: 'Email đã tồn tại'
                 });
             }
 
             const hash = bcrypt.hashSync(password, 10);
+
             const createdNewUser = await User.create({
                 fullName,
                 email,
                 password: hash,
                 phone,
                 address,
-                city
+                city,
+                isVerified: false,
+                verificationToken
             });
 
             if (createdNewUser) {
-                resolve({
+                await sendVerificationEmail(email, verificationToken);
+                return resolve({
                     status: 'OK',
-                    message: 'Tạo người dùng thành công',
+                    message: 'Tạo người dùng thành công, vui lòng kiểm tra email để xác minh.',
                     data: createdNewUser
                 });
             }
         } catch (error) {
-            reject(error);
+            return reject(error);
         }
     });
 };
 
 const loginUserService = (userLogin) => {
     return new Promise(async (resolve, reject) => {
-        const { email, password } = userLogin
+        const { email, password } = userLogin;
         try {
-            const checkUser = await User.findOne({
-                email: email
-            })
-            if (checkUser === null) {
-                resolve({
+            const checkUser = await User.findOne({ email: email });
+            if (!checkUser) {
+                return resolve({
                     status: 'ERR',
                     message: 'The user is not defined'
-                })
+                });
             }
 
-            const access_token = await AccessToken({
-                id: checkUser.id,
-                isAdmin: checkUser.isAdmin
-            })
+            if (!checkUser.isVerified) {
+                return resolve({
+                    status: 'ERR',
+                    message: 'Email chưa được xác minh'
+                });
+            }
 
-            const refresh_token = await RefreshToken({
-                id: checkUser.id,
-                isAdmin: checkUser.isAdmin
-            })
+            const match = await bcrypt.compare(password, checkUser.password);
+            if (!match) {
+                return resolve({
+                    status: 'ERR',
+                    message: 'Mật khẩu không đúng'
+                });
+            }
 
-            resolve({
+            const access_token = await AccessToken({ id: checkUser.id, isAdmin: checkUser.isAdmin });
+            const refresh_token = await RefreshToken({ id: checkUser.id, isAdmin: checkUser.isAdmin });
+
+            return resolve({
                 status: 'OK',
                 message: 'Đăng nhập thành công',
                 access_token,
                 refresh_token
-            })
-        } catch (e) {
-            reject(e)
+            });
+        } catch (error) {
+            return reject(error);
         }
-    })
-}
+    });
+};
 
 const updateInfoUserService = (id, data) => {
     return new Promise(async (resolve, reject) => {
@@ -172,6 +183,31 @@ const deleteManyUserService = (id) => {
     })
 }
 
+const verifyEmailService = (token) => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            const user = await User.findOne({ verificationToken: token });
+            if (!user) {
+                return resolve({
+                    status: 'ERR',
+                    message: 'Invalid token'
+                });
+            }
+
+            user.isVerified = true;
+            user.verificationToken = null;
+            await user.save();
+
+            return resolve({
+                status: 'OK',
+                message: 'Email verified successfully'
+            });
+        } catch (error) {
+            return reject(error);
+        }
+    });
+};
+
 module.exports = {
     registerUserService,
     loginUserService,
@@ -179,5 +215,6 @@ module.exports = {
     deleteInfoUserService,
     getAllInfoUserService,
     getDetailsInfoUserService,
-    deleteManyUserService
+    deleteManyUserService,
+    verifyEmailService
 };

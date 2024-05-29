@@ -1,5 +1,7 @@
 const UserAllService = require("../services/UserAllService");
-const JwtAllService = require('../services/JwtAllService')
+const JwtAllService = require('../services/JwtAllService');
+const crypto = require('crypto');
+const { sendVerificationEmail } = require("../services/EmailAllService");
 
 const registerUser = async (req, res) => {
     try {
@@ -12,23 +14,28 @@ const registerUser = async (req, res) => {
                 status: 'ERR',
                 message: 'Cần nhập đầy đủ thông tin'
             });
-        }
-
-        else if (!isCheckEmail) {
+        } else if (!isCheckEmail) {
             return res.status(200).json({
                 status: 'ERR',
                 message: 'Định dạng email không hợp lệ'
             });
         }
 
-        const response = await UserAllService.registerUserService(req.body);
+        const verificationToken = crypto.randomBytes(32).toString('hex');
+
+        const response = await UserAllService.registerUserService({
+            ...req.body,
+            isVerified: false,
+            verificationToken
+        });
+
         return res.status(200).json(response);
     } catch (e) {
         return res.status(404).json({
             message: e.message
         });
     }
-}
+};
 
 const loginUser = async (req, res) => {
     try {
@@ -41,146 +48,182 @@ const loginUser = async (req, res) => {
                 status: 'ERR',
                 message: 'Cần nhập đầy đủ thông tin'
             });
-        }
-
-        else if (!isCheckEmail) {
+        } else if (!isCheckEmail) {
             return res.status(200).json({
                 status: 'ERR',
                 message: 'Định dạng email không hợp lệ'
             });
         }
 
-        const response = await UserAllService.loginUserService(req.body)
-        const { refresh_token, ...newResponse } = response
+        const response = await UserAllService.loginUserService(req.body);
+
+        // Check if the user is verified before logging in
+        if (response.data && !response.data.isVerified) {
+            return res.status(200).json({
+                status: 'ERR',
+                message: 'Please verify your email before logging in'
+            });
+        }
+
+        const { refresh_token, ...newResponse } = response;
         res.cookie('refresh_token', refresh_token, {
             httpOnly: true,
             secure: false,
             sameSite: 'strict',
             path: '/',
-        })
-        return res.status(200).json(newResponse)
+        });
+        return res.status(200).json(newResponse);
     } catch (e) {
         return res.status(404).json({
-            message: e
-        })
+            message: e.message
+        });
     }
-}
+};
+
+const verifyEmail = async (req, res) => {
+    try {
+        const { token } = req.query;
+        if (!token) {
+            return res.status(400).json({
+                status: 'ERR',
+                message: 'Token is required'
+            });
+        }
+
+        const response = await UserAllService.verifyEmailService(token);
+        if (!response) {
+            return res.status(400).json({
+                status: 'ERR',
+                message: 'Invalid token'
+            });
+        }
+
+        return res.status(200).json({
+            status: 'OK',
+            message: 'Email verified successfully'
+        });
+    } catch (e) {
+        return res.status(404).json({
+            message: e.message
+        });
+    }
+};
 
 const logoutUser = async (req, res) => {
     try {
-        res.clearCookie('refresh_token')
+        res.clearCookie('refresh_token');
         return res.status(200).json({
             status: 'OK',
             message: 'Đăng xuất thành công'
-        })
+        });
     } catch (e) {
         return res.status(404).json({
-            message: e
-        })
+            message: e.message
+        });
     }
-}
+};
 
 const updateInfoUser = async (req, res) => {
     try {
-        const userId = req.params.id
-        const data = req.body
+        const userId = req.params.id;
+        const data = req.body;
         if (!userId) {
             return res.status(200).json({
                 status: 'ERR',
                 message: 'The userId is required'
-            })
+            });
         }
-        const response = await UserAllService.updateInfoUserService(userId, data)
-        return res.status(200).json(response)
+        const response = await UserAllService.updateInfoUserService(userId, data);
+        return res.status(200).json(response);
     } catch (e) {
         return res.status(404).json({
-            message: e
-        })
+            message: e.message
+        });
     }
-}
+};
 
 const deleteInfoUser = async (req, res) => {
     try {
-        const userId = req.params.id
+        const userId = req.params.id;
         if (!userId) {
             return res.status(200).json({
                 status: 'ERR',
                 message: 'The userId is required'
-            })
+            });
         }
-        const response = await UserAllService.deleteInfoUserService(userId)
-        return res.status(200).json(response)
+        const response = await UserAllService.deleteInfoUserService(userId);
+        return res.status(200).json(response);
     } catch (e) {
         return res.status(404).json({
-            message: e
-        })
+            message: e.message
+        });
     }
-}
+};
 
 const getAllInfoUser = async (req, res) => {
     try {
-        const response = await UserAllService.getAllInfoUserService()
-        return res.status(200).json(response)
+        const response = await UserAllService.getAllInfoUserService();
+        return res.status(200).json(response);
     } catch (e) {
         return res.status(404).json({
-            message: e
-        })
+            message: e.message
+        });
     }
-}
+};
 
 const getDetailsInfoUser = async (req, res) => {
     try {
-        const userId = req.params.id
+        const userId = req.params.id;
         if (!userId) {
             return res.status(200).json({
                 status: 'ERR',
                 message: 'The userId is required'
-            })
+            });
         }
-        const response = await UserAllService.getDetailsInfoUserService(userId)
-        return res.status(200).json(response)
+        const response = await UserAllService.getDetailsInfoUserService(userId);
+        return res.status(200).json(response);
     } catch (e) {
         return res.status(404).json({
-            message: e
-        })
+            message: e.message
+        });
     }
-}
+};
 
 const refreshToken = async (req, res) => {
     try {
-        const token = req.cookies.refresh_token
+        const token = req.cookies.refresh_token;
         if (!token) {
             return res.status(200).json({
                 status: 'ERR',
                 message: 'The token is required'
-            })
+            });
         }
-        const response = await JwtAllService.refreshTokenService(token)
-        return res.status(200).json(response)
+        const response = await JwtAllService.refreshTokenService(token);
+        return res.status(200).json(response);
     } catch (e) {
         return res.status(404).json({
-            message: e
-        })
+            message: e.message
+        });
     }
-}
+};
 
 const deleteManyUser = async (req, res) => {
     try {
-        const ids = req.body.ids
+        const ids = req.body.ids;
         if (!ids) {
             return res.status(200).json({
                 status: 'ERR',
-                message: 'The ids is required'
-            })
+                message: 'The ids are required'
+            });
         }
-        const response = await UserAllService.deleteManyUserService(ids)
-        return res.status(200).json(response)
+        const response = await UserAllService.deleteManyUserService(ids);
+        return res.status(200).json(response);
     } catch (e) {
         return res.status(404).json({
-            message: e
-        })
+            message: e.message
+        });
     }
-}
+};
 
 module.exports = {
     registerUser,
@@ -191,5 +234,6 @@ module.exports = {
     getAllInfoUser,
     getDetailsInfoUser,
     refreshToken,
-    deleteManyUser
+    deleteManyUser,
+    verifyEmail
 };
