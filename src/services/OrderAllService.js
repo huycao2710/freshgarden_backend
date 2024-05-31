@@ -73,19 +73,16 @@ const createNewOrderService = (newOrder) => {
 const getAllInfoOrderService = () => {
     return new Promise(async (resolve, reject) => {
         try {
-            const allOrder = await Order.find().sort({ createdAt: -1, updatedAt: -1 });
+            const allOrder = await Order.find().sort({ createdAt: -1, updatedAt: -1 })
             resolve({
                 status: 'OK',
                 message: 'Success',
                 data: allOrder
-            });
+            })
         } catch (e) {
-            reject({
-                status: 'ERR',
-                message: e.message
-            });
+            reject(e)
         }
-    });
+    })
 };
 
 const getAllOrderDetailsInfoService = (id) => {
@@ -116,26 +113,25 @@ const getAllOrderDetailsInfoService = (id) => {
 const getDetailsInfoOrderService = (id) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const order = await Order.findById(id);
-            if (!order) {
+            const order = await Order.findById({
+                _id: id
+            })
+            if (order === null) {
                 resolve({
                     status: 'ERR',
                     message: 'The order is not defined'
-                });
-            } else {
-                resolve({
-                    status: 'OK',
-                    message: 'SUCCESS',
-                    data: order
-                });
+                })
             }
+
+            resolve({
+                status: 'OK',
+                message: 'SUCESSS',
+                data: order
+            })
         } catch (e) {
-            reject({
-                status: 'ERR',
-                message: e.message
-            });
+            reject(e)
         }
-    });
+    })
 };
 
 const cancelOrderDetailsInfoService = (id, data) => {

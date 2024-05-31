@@ -1,7 +1,5 @@
 const UserAllService = require("../services/UserAllService");
 const JwtAllService = require('../services/JwtAllService');
-const crypto = require('crypto');
-const { sendVerificationEmail } = require("../services/EmailAllService");
 
 const registerUser = async (req, res) => {
     try {
@@ -21,14 +19,7 @@ const registerUser = async (req, res) => {
             });
         }
 
-        const verificationToken = crypto.randomBytes(32).toString('hex');
-
-        const response = await UserAllService.registerUserService({
-            ...req.body,
-            isVerified: false,
-            verificationToken
-        });
-
+        const response = await UserAllService.registerUserService(req.body);
         return res.status(200).json(response);
     } catch (e) {
         return res.status(404).json({
@@ -57,13 +48,12 @@ const loginUser = async (req, res) => {
 
         const response = await UserAllService.loginUserService(req.body);
 
-        // Check if the user is verified before logging in
-        if (response.data && !response.data.isVerified) {
-            return res.status(200).json({
-                status: 'ERR',
-                message: 'Please verify your email before logging in'
-            });
-        }
+        // if (response.data && !response.data.isVerified) {
+        //     return res.status(200).json({
+        //         status: 'ERR',
+        //         message: 'Please verify your email before logging in'
+        //     });
+        // }
 
         const { refresh_token, ...newResponse } = response;
         res.cookie('refresh_token', refresh_token, {
@@ -72,7 +62,7 @@ const loginUser = async (req, res) => {
             sameSite: 'strict',
             path: '/',
         });
-        return res.status(200).json(newResponse);
+        return res.status(200).json({ ...newResponse, refresh_token });
     } catch (e) {
         return res.status(404).json({
             message: e.message
@@ -80,34 +70,34 @@ const loginUser = async (req, res) => {
     }
 };
 
-const verifyEmail = async (req, res) => {
-    try {
-        const { token } = req.query;
-        if (!token) {
-            return res.status(400).json({
-                status: 'ERR',
-                message: 'Token is required'
-            });
-        }
+// const verifyEmail = async (req, res) => {
+//     try {
+//         const { token } = req.query;
+//         if (!token) {
+//             return res.status(400).json({
+//                 status: 'ERR',
+//                 message: 'Token is required'
+//             });
+//         }
 
-        const response = await UserAllService.verifyEmailService(token);
-        if (!response) {
-            return res.status(400).json({
-                status: 'ERR',
-                message: 'Invalid token'
-            });
-        }
+//         const response = await UserAllService.verifyEmailService(token);
+//         if (!response) {
+//             return res.status(400).json({
+//                 status: 'ERR',
+//                 message: 'Invalid token'
+//             });
+//         }
 
-        return res.status(200).json({
-            status: 'OK',
-            message: 'Email verified successfully'
-        });
-    } catch (e) {
-        return res.status(404).json({
-            message: e.message
-        });
-    }
-};
+//         return res.status(200).json({
+//             status: 'OK',
+//             message: 'Email verified successfully'
+//         });
+//     } catch (e) {
+//         return res.status(404).json({
+//             message: e.message
+//         });
+//     }
+// };
 
 const logoutUser = async (req, res) => {
     try {
@@ -235,5 +225,5 @@ module.exports = {
     getDetailsInfoUser,
     refreshToken,
     deleteManyUser,
-    verifyEmail
+    // verifyEmail
 };

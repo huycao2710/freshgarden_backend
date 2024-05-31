@@ -149,6 +149,18 @@ const getProductsByCategory = async (req, res) => {
     }
 };
 
+const getFeaturedProducts = async (req, res) => {
+    try {
+        const featuredProducts = await ProductAllService.getFeaturedProductsService();
+        return res.status(200).json(featuredProducts);
+    } catch (error) {
+        return res.status(500).json({
+            status: 'ERR',
+            message: error.message
+        });
+    }
+};
+
 module.exports = {
     createNewProduct,
     updateInfoProduct,
@@ -157,5 +169,6 @@ module.exports = {
     getDetailsInfoProduct,
     deleteManyProduct,
     getAllCategory,
-    getProductsByCategory
+    getProductsByCategory,
+    getFeaturedProducts
 }

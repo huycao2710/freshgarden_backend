@@ -4,7 +4,6 @@ const UserAllController = require('../controller/UserAllController');
 const { authenticationMiddleWare, authenticationUserMiddleWare } = require("../middleware/authenticationMiddleware");
 
 router.post('/register', UserAllController.registerUser)
-router.get('/verify-email', UserAllController.verifyEmail)
 router.post('/login', UserAllController.loginUser)
 router.post('/log-out', UserAllController.logoutUser)
 router.put('/update-infouser/:id', authenticationUserMiddleWare, UserAllController.updateInfoUser)

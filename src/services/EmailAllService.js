@@ -41,35 +41,35 @@ const sendEmailCreateOrderService = async (email, orderItems) => {
     }
 };
 
-const sendVerificationEmail = async (email, token) => {
-    try {
-        let transporter = nodemailer.createTransport({
-            host: "smtp.gmail.com",
-            port: 587,
-            secure: false,
-            auth: {
-                user: process.env.MAIL_ACCOUNT,
-                pass: process.env.MAILPASSWORD,
-            },
-        });
+// const sendVerificationEmail = async (email, token) => {
+//     try {
+//         let transporter = nodemailer.createTransport({
+//             host: "smtp.gmail.com",
+//             port: 587,
+//             secure: false,
+//             auth: {
+//                 user: process.env.MAIL_ACCOUNT,
+//                 pass: process.env.MAILPASSWORD,
+//             },
+//         });
 
-        const verificationUrl = `${process.env.BASE_URL}/verify-email?token=${token}`;
+//         const verificationUrl = `${process.env.BASE_URL}/verify-email?token=${token}`;
 
-        let info = await transporter.sendMail({
-            from: process.env.MAIL_ACCOUNT,
-            to: email,
-            subject: "Email Verification",
-            text: `Please verify your email by clicking on the following link: ${verificationUrl}`,
-            html: `<p>Please verify your email by clicking on the following link: <a href="${verificationUrl}">${verificationUrl}</a></p>`
-        });
+//         let info = await transporter.sendMail({
+//             from: process.env.MAIL_ACCOUNT,
+//             to: email,
+//             subject: "Email Verification",
+//             text: `Please verify your email by clicking on the following link: ${verificationUrl}`,
+//             html: `<p>Please verify your email by clicking on the following link: <a href="${verificationUrl}">${verificationUrl}</a></p>`
+//         });
 
-        console.log('Message sent: %s', info.messageId);
-    } catch (error) {
-        console.error('Error in sendVerificationEmail:', error.message);
-    }
-};
+//         console.log('Message sent: %s', info.messageId);
+//     } catch (error) {
+//         console.error('Error in sendVerificationEmail:', error.message);
+//     }
+// };
 
 module.exports = {
     sendEmailCreateOrderService,
-    sendVerificationEmail
+
 };

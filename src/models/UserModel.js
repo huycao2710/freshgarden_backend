@@ -30,11 +30,6 @@ const userSchema = new mongoose.Schema(
         address: { type: String },
         avatar: { type: String },
         city: { type: String },
-        isVerified: {
-            type: Boolean,
-            default: false
-        },
-        verificationToken: { type: String }
     },
     {
         timestamps: true

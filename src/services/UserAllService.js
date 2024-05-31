@@ -1,7 +1,6 @@
 const User = require("../models/UserModel");
 const bcrypt = require("bcrypt");
 const { AccessToken, RefreshToken } = require("./JwtAllService")
-const { sendVerificationEmail } = require("../services/EmailAllService")
 
 const registerUserService = (newUser) => {
     return new Promise(async (resolve, reject) => {
@@ -24,15 +23,12 @@ const registerUserService = (newUser) => {
                 phone,
                 address,
                 city,
-                isVerified: false,
-                verificationToken
             });
 
             if (createdNewUser) {
-                await sendVerificationEmail(email, verificationToken);
                 return resolve({
                     status: 'OK',
-                    message: 'Tạo người dùng thành công, vui lòng kiểm tra email để xác minh.',
+                    message: 'Tạo người dùng thành công.',
                     data: createdNewUser
                 });
             }
@@ -54,14 +50,7 @@ const loginUserService = (userLogin) => {
                 });
             }
 
-            if (!checkUser.isVerified) {
-                return resolve({
-                    status: 'ERR',
-                    message: 'Email chưa được xác minh'
-                });
-            }
-
-            const match = await bcrypt.compare(password, checkUser.password);
+            const match = bcrypt.compareSync(password, checkUser.password);
             if (!match) {
                 return resolve({
                     status: 'ERR',

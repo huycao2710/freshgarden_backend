@@ -209,6 +209,25 @@ const getProductsByCategoryService = (categoryName) => {
     });
 };
 
+const getFeaturedProductsService = () => {
+    return new Promise(async (resolve, reject) => {
+        try {
+            // Thực hiện truy vấn để lấy các sản phẩm nổi bật từ cơ sở dữ liệu
+            const featuredProducts = await Product.find({ featured: true });
+            resolve({
+                status: 'OK',
+                message: 'SUCCESS',
+                data: featuredProducts
+            });
+        } catch (error) {
+            reject({
+                status: 'ERR',
+                message: error.message
+            });
+        }
+    });
+};
+
 module.exports = {
     createNewProductService,
     updateInfoProductService,
@@ -217,5 +236,6 @@ module.exports = {
     getDetailsInfoProductService,
     deleteManyProductService,
     getAllCategoryService,
-    getProductsByCategoryService
+    getProductsByCategoryService,
+    getFeaturedProductsService
 }
