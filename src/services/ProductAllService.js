@@ -2,7 +2,7 @@ const Product = require("../models/ProductModel")
 
 const createNewProductService = (newProduct) => {
     return new Promise(async (resolve, reject) => {
-        const { nameProduct, imageProduct, categoryName, price, countInStock, rating, description, discount } = newProduct
+        const { nameProduct, imageProduct, categoryName, price, countInStock, rating, description, discount, featured } = newProduct
         try {
             const checkProduct = await Product.findOne({
                 nameProduct: nameProduct
@@ -22,6 +22,7 @@ const createNewProductService = (newProduct) => {
                 rating,
                 description,
                 discount: Number(discount),
+                featured
             })
             if (newProduct) {
                 resolve({
@@ -212,7 +213,6 @@ const getProductsByCategoryService = (categoryName) => {
 const getFeaturedProductsService = () => {
     return new Promise(async (resolve, reject) => {
         try {
-            // Thực hiện truy vấn để lấy các sản phẩm nổi bật từ cơ sở dữ liệu
             const featuredProducts = await Product.find({ featured: true });
             resolve({
                 status: 'OK',

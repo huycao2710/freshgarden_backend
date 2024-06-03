@@ -22,10 +22,10 @@ const sendEmailCreateOrderService = async (email, orderItems) => {
         const attachImage = []
         orderItems.forEach((order) => {
             listItem += `<div>
-                <div>Bạn đã đặt sản phẩm <b>${order.name}</b> với Số lượng: <b>${order.amount}</b> và Giá là: <b>${order.price} VND</b></div>
+                <div>Bạn đã đặt sản phẩm <b>${order.nameProduct}</b> với Số lượng: <b>${order.amount}</b> và Giá là: <b>${order.price} VND</b></div>
                 <div>Bên dưới là hình ảnh của sản phẩm</div>
             </div>`
-            attachImage.push({ path: order.image })
+            attachImage.push({ path: order.imageProduct })
         });
 
         let info = await transporter.sendMail({
