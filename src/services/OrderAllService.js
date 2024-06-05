@@ -316,7 +316,8 @@ const paymentOrderVnpay = (req) => {
         "vnp_ReturnUrl": returnUrl,
         "vnp_IpAddr": ipAddr,
         "vnp_CreateDate": createDate,
-        "vnp_SecureHashType": "SHA512"
+        "vnp_SecureHashType": "SHA512",
+
       };
 
       // vnp_Params = sortObject(vnp_Params);
@@ -331,19 +332,31 @@ const paymentOrderVnpay = (req) => {
 
       // resolve({ errCode: 200, link: vnpUrl, orderId: orderId });
 
-      Object.entries(vnp_Params)
-        .sort(([key1], [key2]) => key1.toString().localCompare(key2.toString))
-        .forEach(([key, value]) => {
-          if (!value || value === "" || value === undefined || value === null) {
-            return;
-          }
-          redirectUrl.searchParams.append(key, value.toString());
-        })
+      // Object.entries(vnp_Params)
+      //   .sort(([key1], [key2]) => key1.toString().localCompare(key2.toString))
+      //   .forEach(([key, value]) => {
+      //     if (!value || value === "" || value === undefined || value === null) {
+      //       return;
+      //     }
+      //     redirectUrl.searchParams.append(key, value.toString());
+      //   })
 
+      // const hmac = crypto.createHmac("sha512", secretKey);
+      // const signed = hmac.update(Buffer.from(redirectUrl.search.slice(1).toString(), "utf-8")).digest("hex");
+
+      // redirectUrl.searchParams.append("vnp_SecureHash", signed);
+
+      const sortedParams = sortObject(vnp_Params);
+      const queryString = new URLSearchParams(sortedParams).toString();
+      const redirectUrl = new URL(process.env.VNP_URL);
+      redirectUrl.search = queryString;
+
+      const signData = queryString.replace(/%20/g, "+");
       const hmac = crypto.createHmac("sha512", secretKey);
-      const signed = hmac.update(Buffer.from(redirectUrl.search.slice(1).toString(), "utf-8")).digest("hex");
-
+      const signed = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
       redirectUrl.searchParams.append("vnp_SecureHash", signed);
+
+      resolve({ errCode: 200, link: redirectUrl.toString(), orderId: orderId });
 
     } catch (error) {
       console.error("Error in paymentOrderVnpay:", error);
