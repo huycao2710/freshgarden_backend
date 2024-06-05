@@ -277,21 +277,16 @@ let paymentOrderVnpaySuccess = (data) => {
   });
 };
 
-const paymentOrderVnpay = (req) => {
+const paymentOrderVnpay = async (req) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const ipAddr =
-        req.headers["x-forwarded-for"] ||
-        req.connection.remoteAddress ||
-        req.socket.remoteAddress ||
-        req.connection.socket.remoteAddress;
+      const ipAddr = req.headers["x-forwarded-for"] || req.connection.remoteAddress || req.socket.remoteAddress || req.connection.socket.remoteAddress;
 
       const tmnCode = process.env.VNP_TMNCODE;
       const secretKey = process.env.VNP_HASHSECRET;
       let vnpUrl = process.env.VNP_URL;
       const returnUrl = process.env.VNP_RETURNURL;
 
-      // Debug: log the environment variables
       console.log("VNP_TMNCODE:", tmnCode);
       console.log("VNP_HASHSECRET:", secretKey);
       console.log("VNP_URL:", vnpUrl);
@@ -300,7 +295,7 @@ const paymentOrderVnpay = (req) => {
       const createDate = new Date().toISOString().slice(0, 19).replace(/[-T:]/g, '');
       const orderId = uuidv4();
 
-      const { amount, bankCode, orderDescription, orderType, language } = req.body;
+      const { amount, orderDescription, orderType, language } = req.body;
       const locale = language || "vn";
       const currCode = "VND";
 
@@ -318,10 +313,6 @@ const paymentOrderVnpay = (req) => {
         "vnp_IpAddr": ipAddr,
         "vnp_CreateDate": createDate,
       };
-
-      if (bankCode) {
-        vnp_Params["vnp_BankCode"] = bankCode;
-      }
 
       vnp_Params = sortObject(vnp_Params);
 
