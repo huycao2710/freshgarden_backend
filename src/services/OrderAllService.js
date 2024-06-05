@@ -321,7 +321,7 @@ const paymentOrderVnpay = (req) => {
 
       vnp_Params = sortObject(vnp_Params);
       const signData = querystring.stringify(vnp_Params, { encode: false });
-      const hmac = crypto.createHmac("sha265", secretKey);
+      const hmac = crypto.createHmac("sha512", secretKey);
       const signed = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
       vnp_Params["vnp_SecureHash"] = signed;
 
@@ -352,7 +352,7 @@ const confirmOrderVnpay = (data) => {
 
       const signData = querystring.stringify(vnp_Params, { encode: false });
 
-      const hmac = crypto.createHmac("sha265", secretKey);
+      const hmac = crypto.createHmac("sha512", secretKey);
       const signed = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
 
       if (secureHash === signed) {
@@ -368,11 +368,18 @@ const confirmOrderVnpay = (data) => {
 };
 
 function sortObject(obj) {
-  const sorted = {};
-  const keys = Object.keys(obj).sort();
-  keys.forEach(key => {
-    sorted[key] = obj[key];
-  });
+  var sorted = {};
+  var str = [];
+  var key;
+  for (key in obj) {
+    if (obj.hasOwnProperty(key)) {
+      str.push(encodeURIComponent(key));
+    }
+  }
+  str.sort();
+  for (key = 0; key < str.length; key++) {
+    sorted[str[key]] = encodeURIComponent(obj[str[key]]).replace(/%20/g, "+");
+  }
   return sorted;
 }
 
