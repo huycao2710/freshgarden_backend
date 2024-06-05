@@ -84,54 +84,12 @@ const cancelOrderDetailsInfo = async (req, res) => {
         })
     }
 }
-//vnpay
-let paymentOrderVnpay = async (req, res) => {
-    try {
-        let data = await OrderAllService.paymentOrderVnpay(req);
-        return res.status(200).json(data);
-    } catch (error) {
-        console.error('Error in paymentOrderVnpay:', error);
-        return res.status(500).json({
-            errCode: -1,
-            errMessage: 'Error from server'
-        });
-    }
-}
 
-let confirmOrderVnpay = async (req, res) => {
-    try {
-        let data = await OrderAllService.confirmOrderVnpay(req.body);
-        return res.status(200).json(data);
-    } catch (error) {
-        console.error('Error in confirmOrderVnpay:', error);
-        return res.status(500).json({
-            errCode: -1,
-            errMessage: 'Error from server'
-        });
-    }
-}
-
-let paymentOrderVnpaySuccess = async (req, res) => {
-    try {
-        let data = await OrderAllService.paymentOrderVnpaySuccess(req.body);
-        return res.status(200).json(data);
-    } catch (error) {
-        console.error('Error in paymentOrderVnpaySuccess:', error);
-        return res.status(500).json({
-            errCode: -1,
-            errMessage: 'Error from server'
-        });
-    }
-}
 module.exports = {
     createNewOrder,
     getAllInfoOrder,
     getAllOrderDetailsInfo,
     getDetailsInfoOrder,
-    cancelOrderDetailsInfo,
-    //vnpay
-    paymentOrderVnpay: paymentOrderVnpay,
-    confirmOrderVnpay: confirmOrderVnpay,
-    paymentOrderVnpaySuccess: paymentOrderVnpaySuccess,
+    cancelOrderDetailsInfo
 }
 
