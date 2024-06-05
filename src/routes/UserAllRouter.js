@@ -9,7 +9,9 @@ router.post('/log-out', UserAllController.logoutUser)
 router.put('/update-infouser/:id', authenticationUserMiddleWare, UserAllController.updateInfoUser)
 router.delete('/delete-user/:id', authenticationMiddleWare, UserAllController.deleteInfoUser)
 router.get('/get-alluser', authenticationMiddleWare, UserAllController.getAllInfoUser)
-router.get('/get-detailuser/:id', authenticationUserMiddleWare, UserAllController.getDetailsInfoUser)
+//
+router.get('/get-detailuser/:id', UserAllController.getDetailsInfoUser)
+//authenticationUserMiddleWare,
 router.post('/refresh-token', UserAllController.refreshToken)
 router.post('/delete-manyuser', authenticationMiddleWare, UserAllController.deleteManyUser)
 

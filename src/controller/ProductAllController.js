@@ -2,7 +2,7 @@ const ProductAllService = require('../services/ProductAllService')
 
 const createNewProduct = async (req, res) => {
     try {
-        const { nameProduct, imageProduct, categoryName, countInStock, price, rating, description, discount } = req.body;
+        const { nameProduct, imageProduct, categoryName, countInStock, price, rating, description, discount, featured } = req.body;
         if (!nameProduct || !imageProduct || !categoryName || !countInStock || !price || !rating || !description || !discount) {
             return res.status(400).json({
                 status: 'ERR',
@@ -18,7 +18,8 @@ const createNewProduct = async (req, res) => {
             price,
             rating,
             description,
-            discount
+            discount,
+            featured
         });
 
         return res.status(200).json(response);
