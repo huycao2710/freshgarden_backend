@@ -277,16 +277,21 @@ let paymentOrderVnpaySuccess = (data) => {
   });
 };
 
-const paymentOrderVnpay = async (req) => {
+const paymentOrderVnpay = (req) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const ipAddr = req.headers["x-forwarded-for"] || req.connection.remoteAddress || req.socket.remoteAddress || req.connection.socket.remoteAddress;
+      const ipAddr =
+        req.headers["x-forwarded-for"] ||
+        req.connection.remoteAddress ||
+        req.socket.remoteAddress ||
+        req.connection.socket.remoteAddress;
 
       const tmnCode = process.env.VNP_TMNCODE;
       const secretKey = process.env.VNP_HASHSECRET;
       let vnpUrl = process.env.VNP_URL;
       const returnUrl = process.env.VNP_RETURNURL;
 
+      // Debug: log the environment variables
       console.log("VNP_TMNCODE:", tmnCode);
       console.log("VNP_HASHSECRET:", secretKey);
       console.log("VNP_URL:", vnpUrl);
@@ -295,7 +300,7 @@ const paymentOrderVnpay = async (req) => {
       const createDate = new Date().toISOString().slice(0, 19).replace(/[-T:]/g, '');
       const orderId = uuidv4();
 
-      const { amount, orderDescription, orderType, language } = req.body;
+      const { amount, bankCode, orderDescription, orderType, language } = req.body;
       const locale = language || "vn";
       const currCode = "VND";
 
@@ -318,6 +323,7 @@ const paymentOrderVnpay = async (req) => {
 
       const signData = querystring.stringify(vnp_Params, { encode: false });
 
+      const hmac = crypto.createHmac("sha512", secretKey);
       const signed = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
       vnp_Params["vnp_SecureHash"] = signed;
 
@@ -334,35 +340,26 @@ const paymentOrderVnpay = async (req) => {
 const confirmOrderVnpay = (data) => {
   return new Promise(async (resolve, reject) => {
     try {
-      var vnp_Params = data;
+      let vnp_Params = data;
+      const secureHash = vnp_Params["vnp_SecureHash"];
 
-      var secureHash = vnp_Params['vnp_SecureHash'];
-
-      delete vnp_Params['vnp_SecureHash'];
-      delete vnp_Params['vnp_SecureHashType'];
+      delete vnp_Params["vnp_SecureHash"];
+      delete vnp_Params["vnp_SecureHashType"];
 
       vnp_Params = sortObject(vnp_Params);
 
+      const tmnCode = process.env.VNP_TMNCODE;
+      const secretKey = process.env.VNP_HASHSECRET;
 
-      var tmnCode = process.env.VNP_TMNCODE;
-      var secretKey = process.env.VNP_HASHSECRET
+      const signData = querystring.stringify(vnp_Params, { encode: false });
 
-
-      var signData = querystring.stringify(vnp_Params, { encode: false });
-
-      var hmac = crypto.createHmac("sha512", secretKey);
-      var signed = hmac.update(new Buffer(signData, 'utf-8')).digest("hex");
+      const hmac = crypto.createHmac("sha512", secretKey);
+      const signed = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
 
       if (secureHash === signed) {
-        resolve({
-          errCode: 0,
-          errMessage: 'Success'
-        })
+        resolve({ errCode: 0, errMessage: "Success" });
       } else {
-        resolve({
-          errCode: 1,
-          errMessage: 'failed'
-        })
+        resolve({ errCode: 1, errMessage: "Failed" });
       }
     } catch (error) {
       console.error("Error in confirmOrderVnpay:", error);
