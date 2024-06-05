@@ -291,6 +291,12 @@ const paymentOrderVnpay = (req) => {
       let vnpUrl = process.env.VNP_URL;
       const returnUrl = process.env.VNP_RETURNURL;
 
+      // Debug: log the environment variables
+      console.log("VNP_TMNCODE:", tmnCode);
+      console.log("VNP_HASHSECRET:", secretKey);
+      console.log("VNP_URL:", vnpUrl);
+      console.log("VNP_RETURNURL:", returnUrl);
+
       const createDate = new Date().toISOString().slice(0, 19).replace(/[-T:]/g, '');
       const orderId = uuidv4();
 
@@ -325,7 +331,7 @@ const paymentOrderVnpay = (req) => {
       const signed = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
       vnp_Params["vnp_SecureHash"] = signed;
 
-      vnpUrl += "?" + querystring.stringify(vnp_Params, { encode: false });
+      vnpUrl += "?" + querystring.stringify(vnp_Params);
       resolve({ errCode: 200, link: vnpUrl });
 
     } catch (error) {
@@ -369,9 +375,9 @@ const confirmOrderVnpay = (data) => {
 function sortObject(obj) {
   const sorted = {};
   const keys = Object.keys(obj).sort();
-  for (const key of keys) {
-    sorted[key] = encodeURIComponent(obj[key]).replace(/%20/g, "+");
-  }
+  keys.forEach(key => {
+    sorted[key] = obj[key];
+  });
   return sorted;
 }
 
