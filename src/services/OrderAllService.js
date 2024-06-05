@@ -316,7 +316,7 @@ const paymentOrderVnpay = (req) => {
         "vnp_ReturnUrl": returnUrl,
         "vnp_IpAddr": ipAddr,
         "vnp_CreateDate": createDate,
-        "vnp_SecureHashType": "SHA256"
+        "vnp_SecureHashType": "SHA512"
       };
 
       vnp_Params = sortObject(vnp_Params);
