@@ -352,7 +352,7 @@ const confirmOrderVnpay = (data) => {
 
       const signData = querystring.stringify(vnp_Params, { encode: false });
 
-      const hmac = crypto.createHmac("sha512", secretKey);
+      const hmac = crypto.createHmac("sha265", secretKey);
       const signed = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
 
       if (secureHash === signed) {
