@@ -303,7 +303,6 @@ const paymentOrderVnpay = async (req) => {
         "vnp_Version": "2.1.0",
         "vnp_Command": "pay",
         "vnp_TmnCode": tmnCode,
-        "vnp_secretKey": secretKey,
         "vnp_Locale": locale,
         "vnp_CurrCode": currCode,
         "vnp_TxnRef": orderId,
