@@ -303,6 +303,7 @@ const paymentOrderVnpay = async (req) => {
         "vnp_Version": "2.1.0",
         "vnp_Command": "pay",
         "vnp_TmnCode": tmnCode,
+        "vnp_secretKey": secretKey,
         "vnp_Locale": locale,
         "vnp_CurrCode": currCode,
         "vnp_TxnRef": orderId,
@@ -322,15 +323,8 @@ const paymentOrderVnpay = async (req) => {
       const signed = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
       vnp_Params["vnp_SecureHash"] = signed;
 
-      var querystring = require('qs');
-      var signData = querystring.stringify(vnp_Params, { encode: false });
-      var crypto = require("crypto");
-      var hmac = crypto.createHmac("sha512", secretKey);
-      var signed = hmac.update(new Buffer(signData, 'utf-8')).digest("hex");
-      vnp_Params['vnp_SecureHash'] = signed;
-      vnpUrl += '?' + querystring.stringify(vnp_Params, { encode: false });
-
-      res.redirect(vnpUrl)
+      vnpUrl += "?" + querystring.stringify(vnp_Params);
+      resolve({ errCode: 200, link: vnpUrl });
 
     } catch (error) {
       console.error("Error in paymentOrderVnpay:", error);
@@ -353,10 +347,14 @@ const confirmOrderVnpay = (data) => {
       const tmnCode = process.env.VNP_TMNCODE;
       const secretKey = process.env.VNP_HASHSECRET;
 
-      const signData = querystring.stringify(vnp_Params, { encode: false });
+      var signData = querystring.stringify(vnp_Params, { encode: false });
+      var crypto = require("crypto");
+      var hmac = crypto.createHmac("sha512", secretKey);
+      var signed = hmac.update(new Buffer(signData, 'utf-8')).digest("hex");
+      vnp_Params['vnp_SecureHash'] = signed;
+      vnpUrl += '?' + querystring.stringify(vnp_Params, { encode: false });
 
-      const hmac = crypto.createHmac("sha512", secretKey);
-      const signed = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
+      res.redirect(vnpUrl)
 
       if (secureHash === signed) {
         resolve({ errCode: 0, errMessage: "Success" });
