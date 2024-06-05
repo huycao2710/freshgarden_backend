@@ -305,7 +305,7 @@ const paymentOrderVnpay = (req) => {
       const currCode = "VND";
 
       let vnp_Params = {
-        "vnp_Version": "2.1.0",
+        "vnp_Version": "2.0.0",
         "vnp_Command": "pay",
         "vnp_TmnCode": tmnCode,
         "vnp_Locale": locale,
