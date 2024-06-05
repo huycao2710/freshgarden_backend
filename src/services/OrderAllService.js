@@ -291,7 +291,6 @@ const paymentOrderVnpay = (req) => {
       let vnpUrl = process.env.VNP_URL;
       const returnUrl = process.env.VNP_RETURNURL;
 
-      // Debug: log the environment variables
       console.log("VNP_TMNCODE:", tmnCode);
       console.log("VNP_HASHSECRET:", secretKey);
       console.log("VNP_URL:", vnpUrl);
@@ -317,6 +316,7 @@ const paymentOrderVnpay = (req) => {
         "vnp_ReturnUrl": returnUrl,
         "vnp_IpAddr": ipAddr,
         "vnp_CreateDate": createDate,
+        "vnp_SecureHashType": "SHA256"
       };
 
       vnp_Params = sortObject(vnp_Params);
@@ -324,6 +324,8 @@ const paymentOrderVnpay = (req) => {
       const hmac = crypto.createHmac("sha512", secretKey);
       const signed = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
       vnp_Params["vnp_SecureHash"] = signed;
+
+
 
       vnpUrl += "?" + querystring.stringify(vnp_Params);
 
