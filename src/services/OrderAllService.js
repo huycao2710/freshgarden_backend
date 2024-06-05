@@ -319,17 +319,31 @@ const paymentOrderVnpay = (req) => {
         "vnp_SecureHashType": "SHA512"
       };
 
-      vnp_Params = sortObject(vnp_Params);
-      const signData = querystring.stringify(vnp_Params, { encode: false });
+      // vnp_Params = sortObject(vnp_Params);
+      // const signData = querystring.stringify(vnp_Params, { encode: false });
+      // const hmac = crypto.createHmac("sha512", secretKey);
+      // const signed = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
+      // vnp_Params["vnp_SecureHash"] = signed;
+
+
+
+      // vnpUrl += "?" + querystring.stringify(vnp_Params);
+
+      // resolve({ errCode: 200, link: vnpUrl, orderId: orderId });
+
+      Object.entries(vnp_Params)
+        .sort(([key1], [key2]) => key1.toString().localCompare(key2.toString))
+        .forEach(([key, value]) => {
+          if (!value || value === "" || value === undefined || value === null) {
+            return;
+          }
+          redirectUrl.searchParams.append(key, value.toString());
+        })
+
       const hmac = crypto.createHmac("sha512", secretKey);
-      const signed = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
-      vnp_Params["vnp_SecureHash"] = signed;
+      const signed = hmac.update(Buffer.from(redirectUrl.search.slice(1).toString(), "utf-8")).digest("hex");
 
-
-
-      vnpUrl += "?" + querystring.stringify(vnp_Params);
-
-      resolve({ errCode: 200, link: vnpUrl, orderId: orderId });
+      redirectUrl.searchParams.append("vnp_SecureHash", signed);
 
     } catch (error) {
       console.error("Error in paymentOrderVnpay:", error);
