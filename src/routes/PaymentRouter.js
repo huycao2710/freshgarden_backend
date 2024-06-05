@@ -1,6 +1,6 @@
 const express = require("express");
 const router = express.Router()
-const { authenticationMiddleWare} = require("../middleware/authenticationMiddleware");
+const { authenticationMiddleWare } = require("../middleware/authenticationMiddleware");
 const OrderAllController = require('../controller/OrderAllController');
 const dotenv = require('dotenv');
 dotenv.config()
@@ -12,7 +12,7 @@ router.get('/config', (req, res) => {
     })
 })
 
-router.post('/payment-order-vnpay-success', OrderAllController.paymentOrderVnpay)
+router.post('/payment-order-vnpay-success', OrderAllController.paymentOrderVnpaySuccess)
 router.post('/payment-order-vnpay', OrderAllController.paymentOrderVnpay)
 router.post('/vnpay_return', OrderAllController.confirmOrderVnpay)
 
