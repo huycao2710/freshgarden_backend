@@ -29,6 +29,23 @@ app.use(cookieParser())
 
 routes(app);
 
+app.post('/api/payment/vnpay', (req, res) => {
+    axios({
+        method: 'post',
+        url: 'https://sandbox.vnpayment.vn/paymentv2/vpcpay.html',
+        data: req.body,
+        headers: {
+            // Add necessary headers here
+        }
+    })
+        .then(response => {
+            res.send(response.data);
+        })
+        .catch(error => {
+            res.status(error.response ? error.response.status : 500).send(error.message);
+        });
+});
+
 mongoose.connect(`${process.env.MONGO_DB}`)
     .then(() => {
         console.log('Connect Db success')
