@@ -227,7 +227,6 @@ const getFeaturedProductsService = () => {
         }
     });
 };
-
 module.exports = {
     createNewProductService,
     updateInfoProductService,
@@ -237,5 +236,6 @@ module.exports = {
     deleteManyProductService,
     getAllCategoryService,
     getProductsByCategoryService,
-    getFeaturedProductsService
+    getFeaturedProductsService,
+    
 }
