@@ -1,8 +1,6 @@
 const OrderAllController = require("../controller/OrderAllController");
-const { v4: uuidv4 } = require('uuid');
 const express = require("express");
 const cors = require("cors");
-const querystring = require("querystring")
 const router = express.Router()
 const { authenticationMiddleWare } = require("../middleware/authenticationMiddleware");
 const dotenv = require('dotenv');
@@ -11,7 +9,6 @@ dotenv.config()
 const axios = require('axios')
 const qs = require('qs')
 const CryptoJS = require('crypto-js');
-const crypto = require('crypto');
 let $ = require('jquery');
 const bodyParser = require('body-parser');
 const cookieParser = require('cookie-parser');
@@ -32,7 +29,7 @@ router.get('/config', (req, res) => {
 //vnpay
 router.post('/payment-order-vnpay-success', OrderAllController.paymentOrderVnpaySuccess)
 router.post('/vnpay', OrderAllController.paymentOrderVnpay)
-router.post('/vnpay_return', OrderAllController.confirmOrderVnpay)
+router.post('/vnpay-return', OrderAllController.confirmOrderVnpay)
 
 //zalopay
 const config = {
@@ -112,7 +109,7 @@ router.post('/momo', async (req, res) => {
     var redirectUrl = 'https://webhook.site/b3088a6a-2d17-4f8d-a383-71389a6c600b';
     var ipnUrl = 'https://webhook.site/b3088a6a-2d17-4f8d-a383-71389a6c600b';
     var requestType = "payWithMethod";
-    var amount = '50000';
+    const amount = '15000';
     var orderId = partnerCode + new Date().getTime();
     var requestId = orderId;
     var extraData = '';

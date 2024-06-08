@@ -1,10 +1,8 @@
-
 const Order = require("../models/OrderProductModel");
 const Product = require("../models/ProductModel");
 const EmailAllService = require("../services/EmailAllService");
-const { v4: uuidv4 } = require('uuid');
-const moment = require('moment');
-
+const { v4: uuidv4 } = require("uuid");
+const moment = require("moment");
 
 const createNewOrderService = (newOrder) => {
   return new Promise(async (resolve, reject) => {
@@ -219,130 +217,129 @@ const cancelOrderDetailsInfoService = (id, data) => {
 
 let paymentOrderVnpaySuccess = (data) => {
   return new Promise(async (resolve, reject) => {
-      try {
-          let product = await db.OrderProduct.create({
+    try {
+      let product = await db.OrderProduct.create({
+        addressUserId: data.addressUserId,
+        isPaymentOnlien: data.isPaymentOnlien,
+        statusId: "S3",
+        typeShipId: data.typeShipId,
+        voucherId: data.voucherId,
+        note: data.note,
+      });
 
-              addressUserId: data.addressUserId,
-              isPaymentOnlien: data.isPaymentOnlien,
-              statusId: 'S3',
-              typeShipId: data.typeShipId,
-              voucherId: data.voucherId,
-              note: data.note
+      data.arrDataShopCart = data.arrDataShopCart.map((item, index) => {
+        item.orderId = product.dataValues.id;
+        return item;
+      });
 
-          })
-
-          data.arrDataShopCart = data.arrDataShopCart.map((item, index) => {
-              item.orderId = product.dataValues.id
-              return item;
-          })
-
-          await db.OrderDetail.bulkCreate(data.arrDataShopCart)
-          let res = await db.ShopCart.findOne({ where: { userId: data.userId, statusId: 0 } })
-          if (res) {
-              await db.ShopCart.destroy({
-                  where: { userId: data.userId }
-              })
-              for (let i = 0; i < data.arrDataShopCart.length; i++) {
-                  let productDetailSize = await db.ProductDetailSize.findOne({
-                      where: { id: data.arrDataShopCart[i].productId },
-                      raw: false
-                  })
-                  productDetailSize.stock = productDetailSize.stock - data.arrDataShopCart[i].quantity
-                  await productDetailSize.save()
-
-              }
-
-          }
-          if (data.voucherId && data.userId) {
-              let voucherUses = await db.VoucherUsed.findOne({
-                  where: {
-                      voucherId: data.voucherId,
-                      userId: data.userId
-                  },
-                  raw: false
-              })
-              voucherUses.status = 1;
-              await voucherUses.save()
-          }
-          resolve({
-              errCode: 0,
-              errMessage: 'ok'
-          })
-      } catch (error) {
-          reject(error)
+      await db.OrderDetail.bulkCreate(data.arrDataShopCart);
+      let res = await db.ShopCart.findOne({
+        where: { userId: data.userId, statusId: 0 },
+      });
+      if (res) {
+        await db.ShopCart.destroy({
+          where: { userId: data.userId },
+        });
+        for (let i = 0; i < data.arrDataShopCart.length; i++) {
+          let productDetailSize = await db.ProductDetailSize.findOne({
+            where: { id: data.arrDataShopCart[i].productId },
+            raw: false,
+          });
+          productDetailSize.stock =
+            productDetailSize.stock - data.arrDataShopCart[i].quantity;
+          await productDetailSize.save();
+        }
       }
-  })
-}
+      if (data.voucherId && data.userId) {
+        let voucherUses = await db.VoucherUsed.findOne({
+          where: {
+            voucherId: data.voucherId,
+            userId: data.userId,
+          },
+          raw: false,
+        });
+        voucherUses.status = 1;
+        await voucherUses.save();
+      }
+      resolve({
+        errCode: 0,
+        errMessage: "ok",
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
 let paymentOrderVnpay = (req) => {
   return new Promise(async (resolve, reject) => {
-      try {
-          var ipAddr = req.headers['x-forwarded-for'] ||
-              req.connection.remoteAddress ||
-              req.socket.remoteAddress ||
-              req.connection.socket.remoteAddress;
+    try {
+      var ipAddr =
+        req.headers["x-forwarded-for"] ||
+        req.connection.remoteAddress ||
+        req.socket.remoteAddress ||
+        req.connection.socket.remoteAddress;
 
+      var tmnCode = process.env.VNP_TMNCODE;
+      var secretKey = process.env.VNP_HASHSECRET;
+      var vnpUrl = process.env.VNP_URL;
+      var returnUrl = process.env.VNP_RETURNURL;
 
+      let date = new Date();
+      var createDate = moment(date).format("YYYYMMDDHHmmss");
 
-          var tmnCode = process.env.VNP_TMNCODE;
-          var secretKey = process.env.VNP_HASHSECRET
-          var vnpUrl = process.env.VNP_URL
-          var returnUrl = process.env.VNP_RETURNURL
+      var orderId = uuidv4();
 
-          let date = new Date();
-          var createDate =  moment(date).format('YYYYMMDDHHmmss');
+      console.log("createDate", createDate);
+      console.log("orderId", orderId);
+      var amount = req.body.amount;
+      var bankCode = req.body.bankCode;
 
-          var orderId = uuidv4();
-
-          console.log("createDate", createDate)
-          console.log("orderId", orderId)
-          var amount = req.body.amount;
-          var bankCode = req.body.bankCode;
-
-          var orderInfo = req.body.orderDescription;
-          var orderType = req.body.orderType;
-          var locale = req.body.language;
-          if (locale === null || locale === '') {
-              locale = 'vn';
-          }
-          var currCode = 'VND';
-          var vnp_Params = {};
-          vnp_Params['vnp_Version'] = '2.1.0';
-          vnp_Params['vnp_Command'] = 'pay';
-          vnp_Params['vnp_TmnCode'] = tmnCode;
-          // vnp_Params['vnp_Merchant'] = ''
-          vnp_Params['vnp_Locale'] = locale;
-          vnp_Params['vnp_CurrCode'] = currCode;
-          vnp_Params['vnp_TxnRef'] = orderId;
-          vnp_Params['vnp_OrderInfo'] = orderInfo;
-          vnp_Params['vnp_OrderType'] = orderType;
-          vnp_Params['vnp_Amount'] = amount * 100;
-          vnp_Params['vnp_ReturnUrl'] = returnUrl;
-          vnp_Params['vnp_IpAddr'] = ipAddr;
-          vnp_Params['vnp_CreateDate'] = createDate;
-          if (bankCode !== null && bankCode !== '') {
-              vnp_Params['vnp_BankCode'] = bankCode;
-          }
-
-          vnp_Params = sortObject(vnp_Params);
-
-          let querystring = require('qs')
-          var signData = querystring.stringify(vnp_Params,{encode : false});
-          let crypto = require('crypto');
-          var hmac = crypto.createHmac("sha512", secretKey);
-          let signed = hmac.update(Buffer.from(signData, 'utf-8')).digest("hex");
-          vnp_Params['vnp_SecureHash'] = signed;
-
-          var paymentUrl = vnpUrl + '?' + querystring.stringify(vnp_Params, { encode: false });
-          console.log(paymentUrl)
-          resolve({
-              errCode: 200,
-              link: paymentUrl
-          })
-      } catch (error) {
-          reject(error)
+      var orderInfo = req.body.orderDescription;
+      var orderType = req.body.orderType;
+      var locale = req.body.language;
+      if (locale === null || locale === "") {
+        locale = "vn";
       }
-  })
-}
+      var currCode = "VND";
+      var vnp_Params = {};
+      vnp_Params["vnp_Version"] = "2.1.0";
+      vnp_Params["vnp_Command"] = "pay";
+      vnp_Params["vnp_TmnCode"] = tmnCode;
+      // vnp_Params['vnp_Merchant'] = ''
+      vnp_Params["vnp_Locale"] = locale;
+      vnp_Params["vnp_CurrCode"] = currCode;
+      vnp_Params["vnp_TxnRef"] = orderId;
+      vnp_Params["vnp_OrderInfo"] = orderInfo;
+      vnp_Params["vnp_OrderType"] = orderType;
+      vnp_Params["vnp_Amount"] = amount * 100;
+      vnp_Params["vnp_ReturnUrl"] = returnUrl;
+      vnp_Params["vnp_IpAddr"] = ipAddr;
+      vnp_Params["vnp_CreateDate"] = createDate;
+      if (bankCode !== null && bankCode !== "") {
+        vnp_Params["vnp_BankCode"] = bankCode;
+      }
+
+      vnp_Params = sortObject(vnp_Params);
+
+      let querystring = require("qs");
+      var signData = querystring.stringify(vnp_Params, { encode: false });
+      let crypto = require("crypto");
+      var hmac = crypto.createHmac("sha512", secretKey);
+      let signed = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
+      vnp_Params["vnp_SecureHash"] = signed;
+
+      var paymentUrl =
+        vnpUrl + "?" + querystring.stringify(vnp_Params, { encode: false });
+      console.log(paymentUrl);
+      resolve({
+        errCode: 200,
+        link: paymentUrl,
+      });
+    } catch (error) {
+      reject(error);
+    }
+  });
+};
 let confirmOrderVnpay = (data) => {
   return new Promise(async (resolve, reject) => {
       try {
@@ -357,16 +354,18 @@ let confirmOrderVnpay = (data) => {
 
 
           var tmnCode = process.env.VNP_TMNCODE;
-          var secretKey = process.env.VNP_HASHSECRET;
+          var secretKey = process.env.VNP_HASHSECRET
 
-          let querystring = require('qs')
-          var signData = querystring.stringify(vnp_Params);
-          let crypto = require('crypto');
+
+          var signData = querystring.stringify(vnp_Params, { encode: false });
+
           var hmac = crypto.createHmac("sha512", secretKey);
-          let signed = hmac.update(Buffer.from(signData, 'utf-8')).digest("hex");
-
+          let signed = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
           if (secureHash === signed) {
-            res.render('success', {code: vnp_Params['vnp_ResponseCode']})
+              resolve({
+                  errCode: 0,
+                  errMessage: 'Success'
+              })
           } else {
               resolve({
                   errCode: 1,
@@ -384,13 +383,13 @@ function sortObject(obj) {
   var str = [];
   var key;
   for (key in obj) {
-      if (obj.hasOwnProperty(key)) {
-          str.push(encodeURIComponent(key));
-      }
+    if (obj.hasOwnProperty(key)) {
+      str.push(encodeURIComponent(key));
+    }
   }
   str.sort();
   for (key = 0; key < str.length; key++) {
-      sorted[str[key]] = encodeURIComponent(obj[str[key]]).replace(/%20/g, "+");
+    sorted[str[key]] = encodeURIComponent(obj[str[key]]).replace(/%20/g, "+");
   }
   return sorted;
 }
@@ -403,5 +402,5 @@ module.exports = {
   //vnpay
   paymentOrderVnpay,
   paymentOrderVnpaySuccess,
-  confirmOrderVnpay
+  confirmOrderVnpay,
 };
