@@ -3,6 +3,7 @@ const Order = require("../models/OrderProductModel");
 const Product = require("../models/ProductModel");
 const EmailAllService = require("../services/EmailAllService");
 const { v4: uuidv4 } = require('uuid');
+const moment = require('moment');
 
 
 const createNewOrderService = (newOrder) => {
@@ -286,7 +287,10 @@ let paymentOrderVnpay = (req) => {
           var secretKey = process.env.VNP_HASHSECRET
           var vnpUrl = process.env.VNP_URL
           var returnUrl = process.env.VNP_RETURNURL
-          var createDate =  new Date().toISOString().slice(0, 19).replace('T', '');
+
+          let date = new Date();
+          var createDate =  moment(date).format('YYYYMMDDHHmmss');
+
           var orderId = uuidv4();
 
           console.log("createDate", createDate)
