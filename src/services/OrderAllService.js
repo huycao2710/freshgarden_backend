@@ -215,6 +215,7 @@ const cancelOrderDetailsInfoService = (id, data) => {
   });
 };
 
+//vnpay
 let paymentOrderVnpaySuccess = (data) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -342,40 +343,40 @@ let paymentOrderVnpay = (req) => {
 };
 let confirmOrderVnpay = (data) => {
   return new Promise(async (resolve, reject) => {
-      try {
-          var vnp_Params = data;
+    try {
+      var vnp_Params = data;
 
-          var secureHash = vnp_Params['vnp_SecureHash'];
+      var secureHash = vnp_Params['vnp_SecureHash'];
 
-          delete vnp_Params['vnp_SecureHash'];
-          delete vnp_Params['vnp_SecureHashType'];
+      delete vnp_Params['vnp_SecureHash'];
+      delete vnp_Params['vnp_SecureHashType'];
 
-          vnp_Params = sortObject(vnp_Params);
-
-
-          var tmnCode = process.env.VNP_TMNCODE;
-          var secretKey = process.env.VNP_HASHSECRET
+      vnp_Params = sortObject(vnp_Params);
 
 
-          var signData = querystring.stringify(vnp_Params, { encode: false });
+      var tmnCode = process.env.VNP_TMNCODE;
+      var secretKey = process.env.VNP_HASHSECRET
 
-          var hmac = crypto.createHmac("sha512", secretKey);
-          let signed = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
-          if (secureHash === signed) {
-              resolve({
-                  errCode: 0,
-                  errMessage: 'Success'
-              })
-          } else {
-              resolve({
-                  errCode: 1,
-                  errMessage: 'failed'
-              })
-          }
 
-      } catch (error) {
-          reject(error)
+      var signData = querystring.stringify(vnp_Params, { encode: false });
+
+      var hmac = crypto.createHmac("sha512", secretKey);
+      let signed = hmac.update(Buffer.from(signData, "utf-8")).digest("hex");
+      if (secureHash === signed) {
+        resolve({
+          errCode: 0,
+          errMessage: 'Success'
+        })
+      } else {
+        resolve({
+          errCode: 1,
+          errMessage: 'failed'
+        })
       }
+
+    } catch (error) {
+      reject(error)
+    }
   })
 }
 function sortObject(obj) {

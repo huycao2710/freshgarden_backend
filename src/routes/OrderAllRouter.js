@@ -9,7 +9,7 @@ router.get('/get-allorder', authenticationMiddleWare, OrderAllController.getAllI
 router.get('/get-detailorder/:id', OrderAllController.getDetailsInfoOrder)
 router.get('/get-alldetailorder/:id', OrderAllController.getAllOrderDetailsInfo)
 //authenticationUserMiddleWare,
-router.post('/cancel-order/:id', OrderAllController.cancelOrderDetailsInfo)
+router.delete('/cancel-order/:id', OrderAllController.cancelOrderDetailsInfo)
 //authenticationUserMiddleWare,
 
 module.exports = router
