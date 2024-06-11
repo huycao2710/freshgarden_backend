@@ -110,18 +110,14 @@ let paymentOrderVnpay = async (req, res) => {
 }
 let confirmOrderVnpay = async (req, res) => {
     try {
-        let data = await OrderAllService.confirmOrderVnpay(req.query);
-        if (data.errCode === 0) {
-            res.render('success', { code: data.code });
-        } else {
-            res.render('success', { code: '97' });
-        }
+        let data = await OrderAllService.confirmOrderVnpay(req.body);
+        return res.status(200).json(data);
     } catch (error) {
-        console.error(error);
-        return res.status(500).json({
+        console.log(error)
+        return res.status(200).json({
             errCode: -1,
             errMessage: 'Error from server'
-        });
+        })
     }
 }
 let paymentOrderVnpaySuccess = async (req, res) => {

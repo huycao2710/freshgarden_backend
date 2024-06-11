@@ -133,6 +133,7 @@ const getAllCategory = async (req, res) => {
 const getProductsByCategory = async (req, res) => {
     try {
         const { categoryName } = req.params;
+        const { limit, page, sort, filter } = req.query
         if (!categoryName) {
             return res.status(400).json({
                 status: 'ERR',
@@ -140,7 +141,7 @@ const getProductsByCategory = async (req, res) => {
             });
         }
 
-        const response = await ProductAllService.getProductsByCategoryService(categoryName);
+        const response = await ProductAllService.getProductsByCategoryService(categoryName,Number(limit) || null, Number(page));
         return res.status(200).json(response);
     } catch (error) {
         return res.status(500).json({

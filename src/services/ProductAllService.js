@@ -185,22 +185,21 @@ const getAllCategoryService = () => {
     })
 }
 
-const getProductsByCategoryService = (categoryName) => {
+const getProductsByCategoryService = (categoryName, page, limit) => {
     return new Promise(async (resolve, reject) => {
         try {
-            const products = await Product.find({ categoryName: categoryName });
-            if (!products.length) {
-                resolve({
-                    status: 'ERR',
-                    message: 'No products found for the given category'
-                });
-            } else {
-                resolve({
-                    status: 'OK',
-                    message: 'SUCCESS',
-                    data: products
-                });
-            }
+            const totalProducts = await Product.countDocuments({ categoryName });
+            const products = await Product.find({ categoryName })
+                                           .skip(page * limit)
+                                           .limit(limit);
+            resolve({
+                status: 'OK',
+                message: 'SUCCESS',
+                data: products,
+                total: totalProducts,
+                currentPage: page + 1,
+                totalPages: Math.ceil(totalProducts / limit)
+            });
         } catch (error) {
             reject({
                 status: 'ERR',
@@ -208,6 +207,28 @@ const getProductsByCategoryService = (categoryName) => {
             });
         }
     });
+    // return new Promise(async (resolve, reject) => {
+    //     try {
+    //         const products = await Product.find({ categoryName: categoryName });
+    //         if (!products.length) {
+    //             resolve({
+    //                 status: 'ERR',
+    //                 message: 'No products found for the given category'
+    //             });
+    //         } else {
+    //             resolve({
+    //                 status: 'OK',
+    //                 message: 'SUCCESS',
+    //                 data: products
+    //             });
+    //         }
+    //     } catch (error) {
+    //         reject({
+    //             status: 'ERR',
+    //             message: error.message
+    //         });
+    //     }
+    // });
 };
 
 const getFeaturedProductsService = () => {
