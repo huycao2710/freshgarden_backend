@@ -52,7 +52,7 @@ const createNewOrderService = (newOrder) => {
       const newData = results.filter((item) => item.status === "ERR");
       if (newData.length) {
         const arrId = newData.map((item) => item.id);
-        resolve({
+        reject({
           status: "ERR",
           message: `Sản phẩm với id: ${arrId.join(",")} không đủ hàng`,
         });
@@ -75,6 +75,11 @@ const createNewOrderService = (newOrder) => {
             message: "SUCCESS",
             data: createdOrder,
           });
+        } else {
+          reject({
+            status: "ERR",
+            message: "Không thể tạo đơn hàng",
+          });
         }
       }
     } catch (e) {
@@ -85,6 +90,7 @@ const createNewOrderService = (newOrder) => {
     }
   });
 };
+
 
 const getAllInfoOrderService = () => {
   return new Promise(async (resolve, reject) => {
@@ -216,61 +222,6 @@ const cancelOrderDetailsInfoService = (id, data) => {
 };
 
 //vnpay
-let paymentOrderVnpaySuccess = (data) => {
-  return new Promise(async (resolve, reject) => {
-    try {
-      let product = await db.OrderProduct.create({
-        addressUserId: data.addressUserId,
-        isPaymentOnlien: data.isPaymentOnlien,
-        statusId: "S3",
-        typeShipId: data.typeShipId,
-        voucherId: data.voucherId,
-        note: data.note,
-      });
-
-      data.arrDataShopCart = data.arrDataShopCart.map((item, index) => {
-        item.orderId = product.dataValues.id;
-        return item;
-      });
-
-      await db.OrderDetail.bulkCreate(data.arrDataShopCart);
-      let res = await db.ShopCart.findOne({
-        where: { userId: data.userId, statusId: 0 },
-      });
-      if (res) {
-        await db.ShopCart.destroy({
-          where: { userId: data.userId },
-        });
-        for (let i = 0; i < data.arrDataShopCart.length; i++) {
-          let productDetailSize = await db.ProductDetailSize.findOne({
-            where: { id: data.arrDataShopCart[i].productId },
-            raw: false,
-          });
-          productDetailSize.stock =
-            productDetailSize.stock - data.arrDataShopCart[i].quantity;
-          await productDetailSize.save();
-        }
-      }
-      if (data.voucherId && data.userId) {
-        let voucherUses = await db.VoucherUsed.findOne({
-          where: {
-            voucherId: data.voucherId,
-            userId: data.userId,
-          },
-          raw: false,
-        });
-        voucherUses.status = 1;
-        await voucherUses.save();
-      }
-      resolve({
-        errCode: 0,
-        errMessage: "ok",
-      });
-    } catch (error) {
-      reject(error);
-    }
-  });
-};
 let paymentOrderVnpay = (req) => {
   return new Promise(async (resolve, reject) => {
     try {
@@ -283,7 +234,7 @@ let paymentOrderVnpay = (req) => {
       var tmnCode = process.env.VNP_TMNCODE;
       var secretKey = process.env.VNP_HASHSECRET;
       var vnpUrl = process.env.VNP_URL;
-      var returnUrl = process.env.VNP_RETURNURL;
+      var returnUrl = process.env.VNP_RETURNURL;;
 
       let date = new Date();
       var createDate = moment(date).format("YYYYMMDDHHmmss");
@@ -399,6 +350,7 @@ let confirmOrderVnpay = (req, res, next) => {
     res.render("success", { code: "97" });
   }
 };
+
 function sortObject(obj) {
   var sorted = {};
   var str = [];
@@ -422,6 +374,6 @@ module.exports = {
   cancelOrderDetailsInfoService,
   //vnpay
   paymentOrderVnpay,
-  paymentOrderVnpaySuccess,
+  //paymentOrderVnpaySuccess,
   confirmOrderVnpay,
 };

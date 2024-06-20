@@ -120,18 +120,6 @@ let confirmOrderVnpay = async (req, res) => {
         })
     }
 }
-let paymentOrderVnpaySuccess = async (req, res) => {
-    try {
-        let data = await OrderAllService.paymentOrderVnpaySuccess(req.body);
-        return res.status(200).json(data);
-    } catch (error) {
-        console.log(error)
-        return res.status(200).json({
-            errCode: -1,
-            errMessage: 'Error from server'
-        })
-    }
-}
 module.exports = {
     createNewOrder,
     getAllInfoOrder,
@@ -140,7 +128,7 @@ module.exports = {
     cancelOrderDetailsInfo,
     //vnpay
     paymentOrderVnpay,
-    paymentOrderVnpaySuccess,
+    //paymentOrderVnpaySuccess,
     confirmOrderVnpay
 }
 
