@@ -141,7 +141,7 @@ const getProductsByCategory = async (req, res) => {
             });
         }
 
-        const response = await ProductAllService.getProductsByCategoryService(categoryName,Number(limit) || null, Number(page));
+        const response = await ProductAllService.getProductsByCategoryService(categoryName,Number(limit) || null, Number(page) ||0);
         return res.status(200).json(response);
     } catch (error) {
         return res.status(500).json({
