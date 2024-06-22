@@ -114,8 +114,8 @@ router.post('/momo', async (req, res) => {
         const { totalPrice } = req.body;
 
         const orderInfo = 'pay with MoMo';
-        const redirectUrl = 'http://localhost:3002/api/payment/callback_momo';
-        const ipnUrl = 'http://localhost:3002/api/payment/callback_momo';
+        const redirectUrl = '';
+        const ipnUrl = '';
         const requestType = "captureWallet";
         const amount = totalPrice;
         const orderId = partnerCode + new Date().getTime();
@@ -167,22 +167,6 @@ router.post('/momo', async (req, res) => {
     }
 });
 
-
-router.post('/callback_momo', async (req, res) => {
-    try {
-        const { data } = req.body;
-
-        // Kiểm tra và xác thực dữ liệu từ MoMo
-        if (data.resultCode === 0) {
-            return res.redirect(`http://localhost:3000/success?trans_id=${data.orderId}`);
-        } else {
-            return res.redirect(`http://localhost:3000/failure?trans_id=${data.orderId}`);
-        }
-    } catch (error) {
-        console.error("Error in /callback:", error);
-        return res.status(500).send("Internal Server Error");
-    }
-});
 
 router.post('/check_momo', async (req, res) => {
     try {
