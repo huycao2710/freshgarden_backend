@@ -2,7 +2,6 @@ const OrderAllController = require("../controller/OrderAllController");
 const express = require("express");
 const cors = require("cors");
 const router = express.Router()
-const { authenticationMiddleWare } = require("../middleware/authenticationMiddleware");
 const dotenv = require('dotenv');
 const moment = require('moment');
 dotenv.config()
@@ -22,6 +21,7 @@ app.use(express.json({ limit: '50mb' }))
 app.use(express.urlencoded({ limit: '50mb' }))
 app.use(bodyParser.json())
 app.use(cookieParser())
+
 router.get('/config', (req, res) => {
     return res.status(200).json({
         status: 'OK',
@@ -41,105 +41,66 @@ const config = {
     endpoint: "https://sb-openapi.zalopay.vn/v2/create"
 };
 
+router.use(bodyParser.json());
+
 router.post('/zalopay', async (req, res) => {
-    try {
-        const { orderItems, totalPrice, user, email } = req.body;
+    const { orderItems, totalPrice, user, email } = req.body;
 
-        const embed_data = {
-            redirect_url: "https://freshgarden-backend.onrender.com/callback"
-        };
+    const embed_data = {};
 
-        const items = orderItems.map(item => ({
-            item_id: item.id,
-            item_name: item.name,
-            item_price: item.price,
-            item_quantity: item.quantity,
-        }));
+    const items = [{}];
 
-        const transID = Math.floor(Math.random() * 1000000);
-        const order = {
-            app_id: config.app_id,
-            app_trans_id: `${moment().format('YYMMDD')}_${transID}`,
-            app_user: user,
-            app_time: Date.now(),
-            item: JSON.stringify(items),
-            embed_data: JSON.stringify(embed_data),
-            amount: totalPrice,
-            description: `Thanh toán hoá đơn #${transID}`,
-            bank_code: "",
-        };
+    const transID = Math.floor(Math.random() * 1000000);
+    const order = {
+        app_id: config.app_id,
+        app_trans_id: `${moment().format('YYMMDD')}_${transID}`,
+        app_user: "user123",
+        app_time: Date.now(),
+        item: JSON.stringify(items),
+        embed_data: JSON.stringify({}),
+        amount: totalPrice,
+        description: `Thanh toán hoá đơn #${transID}`,
+        bank_code: "",
+    };
 
-        const data = config.app_id + "|" + order.app_trans_id + "|" + order.app_user + "|" + order.amount + "|" + order.app_time + "|" + order.embed_data + "|" + order.item;
-        order.mac = CryptoJS.HmacSHA256(data, config.key1).toString();
+    const data = config.app_id + "|" + order.app_trans_id + "|" + order.app_user + "|" + order.amount + "|" + order.app_time + "|" + order.embed_data + "|" + order.item;
+    order.mac = CryptoJS.HmacSHA256(data, config.key1).toString();
 
-        const result = await axios.post(config.endpoint, null, { params: order });
-
-        return res.status(200).json({
-            status: 'OK',
-            app_trans_id: order.app_trans_id,
-            order_url: result.data.order_url
-        });
-    } catch (error) {
-        console.error("Error in /zalopay:", error);
-        return res.status(500).json({
-            status: 'ERROR',
-            message: 'Internal Server Error'
-        });
-    }
-});
-
-router.post('/callback', async (req, res) => {
-    try {
-        const { data } = req.body;
-
-        if (data.return_code === 1) {
-            // Chuyển hướng đến trang "success" khi thanh toán thành công
-            return res.redirect(`https://huycao2710.id.vn//success?trans_id=${data.app_trans_id}`);
-        } else {
-            // Chuyển hướng đến trang "failure" khi thanh toán không thành công
-            return res.redirect(`https://huycao2710.id.vn//failure?trans_id=${data.app_trans_id}`);
-        }
-    } catch (error) {
-        console.error("Error in /callback:", error);
-        return res.status(500).send("Internal Server Error");
-    }
+    const result = await axios.post(config.endpoint, null, { params: order })
+    return res.status(200).json({
+        status: 'OK',
+        app_trans_id: order.app_trans_id,
+        data: result.data
+    })
 });
 
 router.post('/check_zalopay', async (req, res) => {
-    try {
-        const { trans_id } = req.body;
+    const { trans_id } = req.body;
 
-        const postData = {
-            app_id: config.app_id,
-            app_trans_id: trans_id,
-        };
+    const postData = {
+        app_id: config.app_id,
+        app_trans_id: trans_id,
+    };
 
-        const data = postData.app_id + "|" + postData.app_trans_id + "|" + config.key1;
-        postData.mac = CryptoJS.HmacSHA256(data, config.key1).toString();
+    let data = postData.app_id + "|" + postData.app_trans_id + "|" + config.key1;
+    postData.mac = CryptoJS.HmacSHA256(data, config.key1).toString();
 
-        const postConfig = {
-            method: 'post',
-            url: 'https://sb-openapi.zalopay.vn/v2/query',
-            headers: {
-                'Content-Type': 'application/x-www-form-urlencoded'
-            },
-            data: qs.stringify(postData)
-        };
+    const postConfig = {
+        method: 'post',
+        url: 'https://sb-openapi.zalopay.vn/v2/query',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded'
+        },
+        data: qs.stringify(postData)
+    };
 
-        const result = await axios(postConfig);
-
-        return res.status(200).json({
-            status: 'OK',
-            data: result.data
-        });
-    } catch (error) {
-        console.error("Error in /check_zalopay:", error);
-        return res.status(500).json({
-            status: 'ERROR',
-            message: 'Internal Server Error'
-        });
-    }
+    const result = await axios(postConfig);
+    return res.status(200).json({
+        status: 'OK',
+        data: result.data
+    });
 });
+
 
 //momo
 var accessKey = 'F8BBA842ECF85';
@@ -154,8 +115,8 @@ router.post('/momo', async (req, res) => {
         const { totalPrice } = req.body;
 
         const orderInfo = 'pay with MoMo';
-        const redirectUrl = 'http://localhost:3002/callback';
-        const ipnUrl = 'http://localhost:3002/callback';
+        const redirectUrl = 'http://localhost:3002/api/payment/callback_momo';
+        const ipnUrl = 'http://localhost:3002/api/payment/callback_momo';
         const requestType = "captureWallet";
         const amount = totalPrice;
         const orderId = partnerCode + new Date().getTime();
@@ -196,7 +157,7 @@ router.post('/momo', async (req, res) => {
 
         return res.status(200).json({
             status: 'OK',
-            order_url: result.data.payUrl
+            data: result.data
         });
     } catch (error) {
         console.error("Error in /momo:", error);
@@ -208,7 +169,7 @@ router.post('/momo', async (req, res) => {
 });
 
 
-router.post('/callback', async (req, res) => {
+router.post('/callback_momo', async (req, res) => {
     try {
         const { data } = req.body;
 
@@ -267,16 +228,22 @@ router.post('/check_momo', async (req, res) => {
 
 //stripe
 router.post('/stripe', async (req, res) => {
-    const { line_items } = req.body;
-    console.log(line_items);
+    const { totalPrice } = req.body;
+    console.log(totalPrice);
 
     try {
         const session = await Stripe.checkout.sessions.create({
-            success_url: `${process.env.BASE_URL}`,
-            line_items: line_items.map(item => ({
-                price: item.price_id,
-                quantity: item.quantity,
-            })),
+            success_url: `http://localhost:3000/stripe-success?session_id={CHECKOUT_SESSION_ID}`,
+            line_items: [{
+                price_data: {
+                    currency: "usd",
+                    product_data: {
+                        name: "cake",
+                    },
+                    unit_amount: totalPrice * 100,
+                },
+                quantity: 1,
+            }],
             mode: 'payment',
         });
 

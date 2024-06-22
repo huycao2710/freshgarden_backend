@@ -69,29 +69,19 @@ const getDetailsInfoOrder = async (req, res) => {
 const cancelOrderDetailsInfo = async (req, res) => {
     try {
         const orderId = req.params.id;
-        const data = req.body.orderItems;
-
         if (!orderId) {
             return res.status(400).json({
-                status: "ERR",
-                message: "The orderId is required",
+                status: 'ERR',
+                message: 'The orderId is required'
             });
         }
-
-        if (!data || !Array.isArray(data) || data.length === 0) {
-            return res.status(400).json({
-                status: "ERR",
-                message: "Order items are required and should be a non-empty array",
-            });
-        }
-
-        const response = await OrderAllService.cancelOrderDetailsInfoService(orderId, data);
+        const response = await OrderAllService.cancelOrderDetailsInfoService(orderId);
         return res.status(200).json(response);
     } catch (e) {
         console.error(e);
         return res.status(500).json({
-            status: "ERR",
-            message: "Internal Server Error",
+            status: 'ERR',
+            message: e.message
         });
     }
 };

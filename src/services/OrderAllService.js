@@ -156,60 +156,39 @@ const getDetailsInfoOrderService = (id) => {
   });
 };
 
-const cancelOrderDetailsInfoService = (id, data) => {
+const cancelOrderDetailsInfoService = (orderId) => {
   return new Promise(async (resolve, reject) => {
     try {
-      const promises = data.map(async (orderItem) => {
-        const productData = await Product.findOneAndUpdate(
-          {
-            _id: orderItem.product,
-            selled: { $gte: orderItem.amount },
-          },
-          {
-            $inc: {
-              countInStock: +orderItem.amount,
-              selled: -orderItem.amount,
-            },
-          },
-          { new: true }
-        );
-        if (!productData) {
-          return {
-            status: "ERR",
-            id: orderItem.product,
-          };
+      const order = await Order.findById(orderId);
+      if (!order) {
+        return resolve({
+          status: 'ERR',
+          message: 'Order not found'
+        });
+      }
+
+      // Logic to revert stock quantities
+      const revertStockPromises = order.orderItems.map(async (item) => {
+        const product = await Product.findById(item.product);
+        if (product) {
+          product.countInStock += item.amount;
+          product.selled -= item.amount;
+          await product.save();
         }
       });
+      await Promise.all(revertStockPromises);
 
-      const results = await Promise.all(promises);
-      const errors = results.filter((item) => item && item.status === "ERR");
-      if (errors.length) {
-        const arrId = errors.map((item) => item.id);
-        resolve({
-          status: "ERR",
-          message: `Sản phẩm với id: ${arrId.join(
-            ","
-          )} không tồn tại hoặc không đủ hàng để hủy`,
-        });
-      } else {
-        const order = await Order.findByIdAndDelete(id);
-        if (!order) {
-          resolve({
-            status: "ERR",
-            message: "The order is not defined",
-          });
-        } else {
-          resolve({
-            status: "OK",
-            message: "SUCCESS",
-            data: order,
-          });
-        }
-      }
+      // Remove the order
+      await Order.findByIdAndDelete(orderId);
+
+      resolve({
+        status: 'OK',
+        message: 'Order cancelled successfully'
+      });
     } catch (e) {
       reject({
-        status: "ERR",
-        message: e.message,
+        status: 'ERR',
+        message: e.message
       });
     }
   });
