@@ -29,9 +29,8 @@ router.get('/config', (req, res) => {
     })
 })
 //vnpay
-router.post('/payment-order-vnpay-success', OrderAllController.paymentOrderVnpaySuccess)
 router.post('/vnpay', OrderAllController.paymentOrderVnpay)
-router.post('/vnpay-return', OrderAllController.confirmOrderVnpay)
+//router.get('/vnpay-return', OrderAllController.confirmOrderVnpay)
 
 //zalopay
 const config = {

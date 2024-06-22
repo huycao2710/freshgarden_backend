@@ -100,23 +100,7 @@ let paymentOrderVnpay = async (req, res) => {
 }
 let confirmOrderVnpay = async (req, res) => {
     try {
-        let data = await OrderAllService.confirmOrderVnpay(req.query);
-        if (data.errCode === 0) {
-            res.render('success', { code: data.code });
-        } else {
-            res.render('success', { code: '97' });
-        }
-    } catch (error) {
-        console.error(error);
-        return res.status(500).json({
-            errCode: -1,
-            errMessage: 'Error from server'
-        });
-    }
-}
-let paymentOrderVnpaySuccess = async (req, res) => {
-    try {
-        let data = await OrderAllService.paymentOrderVnpaySuccess(req.body);
+        let data = await OrderAllService.confirmOrderVnpay(req.body);
         return res.status(200).json(data);
     } catch (error) {
         console.log(error)
@@ -134,7 +118,7 @@ module.exports = {
     cancelOrderDetailsInfo,
     //vnpay
     paymentOrderVnpay,
-    paymentOrderVnpaySuccess,
+    //paymentOrderVnpaySuccess,
     confirmOrderVnpay
 }
 
