@@ -164,8 +164,8 @@ router.post("/momo", async (req, res) => {
     const { totalPrice } = req.body;
 
     const orderInfo = "pay with MoMo";
-    const redirectUrl = "";
-    const ipnUrl = "";
+    const redirectUrl = `${process.env.BASE_URL}/zalopay-success`;
+    const ipnUrl = `${process.env.BASE_URL}`;
     const requestType = "captureWallet";
     const amount = totalPrice;
     const orderId = partnerCode + new Date().getTime();
