@@ -2,7 +2,7 @@ const ProductAllService = require('../services/ProductAllService')
 
 const createNewProduct = async (req, res) => {
     try {
-        const { nameProduct, imageProduct, categoryName, countInStock, price, rating, description, discount, featured } = req.body;
+        const { nameProduct, imageProduct, categoryName, countInStock, price, rating, description, discount, featured, available } = req.body;
         if (!nameProduct || !imageProduct || !categoryName || !countInStock || !price || !rating || !description || !discount) {
             return res.status(400).json({
                 status: 'ERR',
@@ -19,7 +19,8 @@ const createNewProduct = async (req, res) => {
             rating,
             description,
             discount,
-            featured
+            featured,
+            available
         });
 
         return res.status(200).json(response);
@@ -141,7 +142,7 @@ const getProductsByCategory = async (req, res) => {
             });
         }
 
-        const response = await ProductAllService.getProductsByCategoryService(categoryName,Number(limit) || null, Number(page) ||0);
+        const response = await ProductAllService.getProductsByCategoryService(categoryName, Number(limit) || null, Number(page) || 0);
         return res.status(200).json(response);
     } catch (error) {
         return res.status(500).json({

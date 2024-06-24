@@ -12,6 +12,7 @@ const createNewProductService = (newProduct) => {
       description,
       discount,
       featured,
+      available
     } = newProduct;
     try {
       const checkProduct = await Product.findOne({
@@ -33,6 +34,7 @@ const createNewProductService = (newProduct) => {
         description,
         discount: Number(discount),
         featured,
+        available
       });
       if (newProduct) {
         resolve({
@@ -208,7 +210,7 @@ const getAllCategoryService = () => {
   });
 };
 
-const getProductsByCategoryService = (categoryName,limit, page) => {
+const getProductsByCategoryService = (categoryName, limit, page) => {
   return new Promise(async (resolve, reject) => {
     try {
       const totalProductCate = await Product.countDocuments({ categoryName });
