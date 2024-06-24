@@ -11,7 +11,8 @@ const productSchema = new mongoose.Schema(
         description: { type: String },
         discount: { type: Number },
         selled: { type: Number },
-        featured: { type: Boolean, default: false }
+        featured: { type: Boolean, default: false },
+        available: { type: Boolean, default: true }
     },
     {
         timestamps: true,
